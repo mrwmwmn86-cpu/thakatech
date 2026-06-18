@@ -1,6 +1,6 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Conversation,
@@ -16,7 +16,7 @@ import {
   PromptInputSubmit,
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
-import { MessageSquareText } from "lucide-react";
+import { MessageSquareText, Timer } from "lucide-react";
 import { toast } from "sonner";
 
 export function ChatWindow({
@@ -28,35 +28,85 @@ export function ChatWindow({
   initialMessages: UIMessage[];
   onMessageSent?: () => void;
 }) {
-  const transport = useMemo(
-    () =>
-      new DefaultChatTransport({
-        api: "/api/chat",
-        prepareSendMessagesRequest: async ({ messages, id }) => {
-          const { data } = await supabase.auth.getSession();
-          const token = data.session?.access_token ?? "";
-          return {
-            body: { messages, threadId: id },
-            headers: { Authorization: `Bearer ${token}` } as Record<string, string>,
-          };
-        },
-      }),
-    []
-  );
+  const [rateLimit, setRateLimit] = useState<{
+    retryAfter: number;
+    resetAt?: string;
+  } | null>(null);
 
-  const { messages, sendMessage, status } = useChat({
+  const transport = useMemo(() => {
+    const originalFetch = globalThis.fetch.bind(globalThis);
+    const customFetch: typeof originalFetch = async (input, init) => {
+      const response = await originalFetch(input, init);
+      if (response.status === 429) {
+        const cloned = response.clone();
+        const text = await cloned.text();
+        const retryAfter = response.headers.get("Retry-After");
+        const resetAt = response.headers.get("X-RateLimit-Reset");
+        const err = new Error(text || "Rate limit exceeded");
+        (err as any).status = 429;
+        (err as any).retryAfter = retryAfter ? parseInt(retryAfter, 10) : 60;
+        (err as any).resetAt = resetAt ?? undefined;
+        throw err;
+      }
+      return response;
+    };
+
+    return new DefaultChatTransport({
+      api: "/api/chat",
+      fetch: customFetch,
+      prepareSendMessagesRequest: async ({ messages, id }) => {
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token ?? "";
+        return {
+          body: { messages, threadId: id },
+          headers: { Authorization: `Bearer ${token}` } as Record<string, string>,
+        };
+      },
+    });
+  }, []);
+
+  const { messages, sendMessage, status, error } = useChat({
     id: threadId,
     messages: initialMessages,
     transport,
-    onError: (e) => toast.error(e.message ?? "Something went wrong"),
+    onError: (e) => {
+      const err = e as any;
+      if (err.status === 429) {
+        const retryAfter =
+          typeof err.retryAfter === "number" && err.retryAfter > 0
+            ? err.retryAfter
+            : 60;
+        setRateLimit({
+          retryAfter,
+          resetAt: err.resetAt,
+        });
+        toast.error(`Rate limit exceeded. Please wait ${retryAfter}s.`);
+      } else {
+        toast.error(e.message ?? "Something went wrong");
+      }
+    },
   });
 
+  useEffect(() => {
+    if (!rateLimit || rateLimit.retryAfter <= 0) return;
+    const interval = setInterval(() => {
+      setRateLimit((prev) => {
+        if (!prev) return null;
+        if (prev.retryAfter <= 1) return null;
+        return { ...prev, retryAfter: prev.retryAfter - 1 };
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [rateLimit?.retryAfter]);
+
   const isLoading = status === "submitted" || status === "streaming";
+  const isRateLimited = rateLimit !== null && rateLimit.retryAfter > 0;
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     textareaRef.current?.focus();
   }, [threadId, status]);
+
 
   return (
     <div className="flex h-full flex-col">
@@ -98,18 +148,42 @@ export function ChatWindow({
       </Conversation>
 
       <div className="border-t border-border bg-background/80 backdrop-blur">
+        {isRateLimited && (
+          <div className="mx-auto w-full max-w-3xl px-4 pt-3">
+            <div className="flex items-center gap-3 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              <Timer className="size-4 shrink-0" />
+              <div>
+                <p className="font-medium">Too many messages sent</p>
+                <p className="text-destructive/80">
+                  Please wait{" "}
+                  <span className="font-mono font-semibold tabular-nums">
+                    {rateLimit.retryAfter}s
+                  </span>{" "}
+                  before sending another message.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="mx-auto w-full max-w-3xl px-4 py-4">
           <PromptInput
             onSubmit={async (message) => {
               const text = message.text.trim();
-              if (!text || isLoading) return;
+              if (!text || isLoading || isRateLimited) return;
               await sendMessage({ text });
               onMessageSent?.();
             }}
           >
-            <PromptInputTextarea ref={textareaRef} placeholder="Message…" />
+            <PromptInputTextarea
+              ref={textareaRef}
+              placeholder={isRateLimited ? "Rate limit active…" : "Message…"}
+              disabled={isRateLimited}
+            />
             <PromptInputFooter className="justify-end">
-              <PromptInputSubmit status={status} disabled={isLoading} />
+              <PromptInputSubmit
+                status={status}
+                disabled={isLoading || isRateLimited}
+              />
             </PromptInputFooter>
           </PromptInput>
           <p className="mt-2 text-center text-xs text-muted-foreground">
