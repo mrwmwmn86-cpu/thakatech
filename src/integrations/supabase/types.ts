@@ -49,6 +49,24 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          count: number
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          user_id: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       threads: {
         Row: {
           created_at: string
@@ -78,7 +96,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_and_increment_rate_limit: {
+        Args: {
+          _max_requests: number
+          _user_id: string
+          _window_seconds: number
+        }
+        Returns: {
+          allowed: boolean
+          current_count: number
+          reset_at: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
