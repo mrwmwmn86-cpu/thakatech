@@ -16,8 +16,9 @@ import {
   PromptInputSubmit,
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
-import { MessageSquareText, Timer } from "lucide-react";
+import { MessageSquareText, Timer, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 export function ChatWindow({
   threadId,
