@@ -10,7 +10,7 @@ import { Loader2, MessageSquareText } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export const Route = createFileRoute("/auth")({
-  ssr: false,
+  head: () => ({
   head: () => ({
     meta: [
       { title: "Sign in · Chat" },
