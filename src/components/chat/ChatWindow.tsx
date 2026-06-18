@@ -102,7 +102,13 @@ export function ChatWindow({
 
   const isLoading = status === "submitted" || status === "streaming";
   const isRateLimited = rateLimit !== null && rateLimit.retryAfter > 0;
+  const showRetryButton = rateLimit !== null && rateLimit.retryAfter === 0;
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const handleRetry = () => {
+    setRateLimit(null);
+    setTimeout(() => textareaRef.current?.focus(), 50);
+  };
 
   useEffect(() => {
     textareaRef.current?.focus();
