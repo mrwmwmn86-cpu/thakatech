@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, MessageSquareText } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
