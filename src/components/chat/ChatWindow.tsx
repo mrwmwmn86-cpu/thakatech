@@ -34,10 +34,10 @@ export function ChatWindow({
         api: "/api/chat",
         prepareSendMessagesRequest: async ({ messages, id }) => {
           const { data } = await supabase.auth.getSession();
-          const token = data.session?.access_token;
+          const token = data.session?.access_token ?? "";
           return {
             body: { messages, threadId: id },
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
+            headers: { Authorization: `Bearer ${token}` } as Record<string, string>,
           };
         },
       }),
@@ -75,9 +75,7 @@ export function ChatWindow({
                 .join("");
               return (
                 <Message key={m.id} from={m.role}>
-                  <MessageContent
-                    variant={m.role === "user" ? "contained" : "flat"}
-                  >
+                  <MessageContent>
                     {m.role === "assistant" ? (
                       <MessageResponse>{text}</MessageResponse>
                     ) : (
@@ -90,7 +88,7 @@ export function ChatWindow({
           )}
           {status === "submitted" && (
             <Message from="assistant">
-              <MessageContent variant="flat">
+              <MessageContent>
                 <Shimmer>Thinking…</Shimmer>
               </MessageContent>
             </Message>

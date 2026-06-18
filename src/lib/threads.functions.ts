@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
-import type { UIMessage } from "ai";
 
 export const listThreads = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -35,10 +34,15 @@ export const deleteThread = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export type ThreadDetail = {
+  thread: { id: string; title: string };
+  messages: Array<{ id: string; role: "user" | "assistant" | "system"; parts: unknown }>;
+};
+
 export const getThread = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
-  .handler(async ({ context, data }) => {
+  .handler(async ({ context, data }): Promise<ThreadDetail | null> => {
     const { data: thread, error } = await context.supabase
       .from("threads")
       .select("id, title")
@@ -54,10 +58,12 @@ export const getThread = createServerFn({ method: "GET" })
       .order("created_at", { ascending: true });
     if (mErr) throw new Error(mErr.message);
 
-    const messages: UIMessage[] = (msgs ?? []).map((m) => ({
-      id: m.id,
-      role: m.role as "user" | "assistant" | "system",
-      parts: m.parts as UIMessage["parts"],
-    }));
-    return { thread, messages };
+    return {
+      thread,
+      messages: (msgs ?? []).map((m) => ({
+        id: m.id,
+        role: m.role as "user" | "assistant" | "system",
+        parts: m.parts,
+      })),
+    };
   });
