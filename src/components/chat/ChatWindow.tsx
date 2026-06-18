@@ -16,8 +16,9 @@ import {
   PromptInputSubmit,
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
-import { MessageSquareText, Timer } from "lucide-react";
+import { MessageSquareText, Timer, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 export function ChatWindow({
   threadId,
@@ -92,7 +93,7 @@ export function ChatWindow({
     const interval = setInterval(() => {
       setRateLimit((prev) => {
         if (!prev) return null;
-        if (prev.retryAfter <= 1) return null;
+        if (prev.retryAfter <= 1) return { ...prev, retryAfter: 0 };
         return { ...prev, retryAfter: prev.retryAfter - 1 };
       });
     }, 1000);
@@ -101,7 +102,13 @@ export function ChatWindow({
 
   const isLoading = status === "submitted" || status === "streaming";
   const isRateLimited = rateLimit !== null && rateLimit.retryAfter > 0;
+  const showRetryButton = rateLimit !== null && rateLimit.retryAfter === 0;
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const handleRetry = () => {
+    setRateLimit(null);
+    setTimeout(() => textareaRef.current?.focus(), 50);
+  };
 
   useEffect(() => {
     textareaRef.current?.focus();
@@ -162,6 +169,28 @@ export function ChatWindow({
                   before sending another message.
                 </p>
               </div>
+            </div>
+          </div>
+        )}
+        {showRetryButton && (
+          <div className="mx-auto w-full max-w-3xl px-4 pt-3">
+            <div className="flex items-center gap-3 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              <Timer className="size-4 shrink-0" />
+              <div className="flex-1">
+                <p className="font-medium">Rate limit lifted</p>
+                <p className="text-destructive/80">
+                  You can send messages again.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRetry}
+                className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                <RotateCcw className="size-3.5 mr-1" />
+                Try again
+              </Button>
             </div>
           </div>
         )}
