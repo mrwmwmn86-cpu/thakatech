@@ -40,6 +40,32 @@ export const Route = createFileRoute("/api/chat")({
         }
         const userId = userData.user.id;
 
+        // Rate limit: 20 messages per 60s per user
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: rl, error: rlError } = await supabaseAdmin.rpc(
+          "check_and_increment_rate_limit",
+          { _user_id: userId, _max_requests: 20, _window_seconds: 60 }
+        );
+        if (rlError) {
+          console.error("rate limit check failed", rlError);
+        } else if (rl && rl[0] && !rl[0].allowed) {
+          const resetAt = new Date(rl[0].reset_at as string);
+          const retryAfter = Math.max(1, Math.ceil((resetAt.getTime() - Date.now()) / 1000));
+          return new Response(
+            JSON.stringify({ error: "Rate limit exceeded. Try again shortly." }),
+            {
+              status: 429,
+              headers: {
+                "Content-Type": "application/json",
+                "Retry-After": String(retryAfter),
+                "X-RateLimit-Limit": "20",
+                "X-RateLimit-Remaining": "0",
+                "X-RateLimit-Reset": resetAt.toISOString(),
+              },
+            }
+          );
+        }
+
         const body = (await request.json()) as ChatBody;
         const { messages, threadId } = body;
         if (!Array.isArray(messages) || !threadId) {
