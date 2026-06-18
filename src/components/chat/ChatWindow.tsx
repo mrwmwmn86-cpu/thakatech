@@ -172,6 +172,28 @@ export function ChatWindow({
             </div>
           </div>
         )}
+        {showRetryButton && (
+          <div className="mx-auto w-full max-w-3xl px-4 pt-3">
+            <div className="flex items-center gap-3 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              <Timer className="size-4 shrink-0" />
+              <div className="flex-1">
+                <p className="font-medium">Rate limit lifted</p>
+                <p className="text-destructive/80">
+                  You can send messages again.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRetry}
+                className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                <RotateCcw className="size-3.5 mr-1" />
+                Try again
+              </Button>
+            </div>
+          </div>
+        )}
         <div className="mx-auto w-full max-w-3xl px-4 py-4">
           <PromptInput
             onSubmit={async (message) => {
