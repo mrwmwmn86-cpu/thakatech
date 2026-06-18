@@ -36,7 +36,7 @@ export const deleteThread = createServerFn({ method: "POST" })
 
 export type ThreadDetail = {
   thread: { id: string; title: string };
-  messages: Array<{ id: string; role: "user" | "assistant" | "system"; parts: unknown }>;
+  messages: Array<{ id: string; role: "user" | "assistant" | "system"; parts: any }>;
 };
 
 export const getThread = createServerFn({ method: "GET" })
