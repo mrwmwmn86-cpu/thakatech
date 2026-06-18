@@ -148,18 +148,42 @@ export function ChatWindow({
       </Conversation>
 
       <div className="border-t border-border bg-background/80 backdrop-blur">
+        {isRateLimited && (
+          <div className="mx-auto w-full max-w-3xl px-4 pt-3">
+            <div className="flex items-center gap-3 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              <Timer className="size-4 shrink-0" />
+              <div>
+                <p className="font-medium">Too many messages sent</p>
+                <p className="text-destructive/80">
+                  Please wait{" "}
+                  <span className="font-mono font-semibold tabular-nums">
+                    {rateLimit.retryAfter}s
+                  </span>{" "}
+                  before sending another message.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="mx-auto w-full max-w-3xl px-4 py-4">
           <PromptInput
             onSubmit={async (message) => {
               const text = message.text.trim();
-              if (!text || isLoading) return;
+              if (!text || isLoading || isRateLimited) return;
               await sendMessage({ text });
               onMessageSent?.();
             }}
           >
-            <PromptInputTextarea ref={textareaRef} placeholder="Message…" />
+            <PromptInputTextarea
+              ref={textareaRef}
+              placeholder={isRateLimited ? "Rate limit active…" : "Message…"}
+              disabled={isRateLimited}
+            />
             <PromptInputFooter className="justify-end">
-              <PromptInputSubmit status={status} disabled={isLoading} />
+              <PromptInputSubmit
+                status={status}
+                disabled={isLoading || isRateLimited}
+              />
             </PromptInputFooter>
           </PromptInput>
           <p className="mt-2 text-center text-xs text-muted-foreground">
