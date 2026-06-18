@@ -93,7 +93,7 @@ export function ChatWindow({
     const interval = setInterval(() => {
       setRateLimit((prev) => {
         if (!prev) return null;
-        if (prev.retryAfter <= 1) return null;
+        if (prev.retryAfter <= 1) return { ...prev, retryAfter: 0 };
         return { ...prev, retryAfter: prev.retryAfter - 1 };
       });
     }, 1000);
