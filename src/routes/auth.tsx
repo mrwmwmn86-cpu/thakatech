@@ -11,9 +11,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
-  head: () => ({
     meta: [
-      { title: "Sign in · Chat" },
+      { title: "Sign in \u00B7 Chat" },
       { name: "description", content: "Sign in to your AI chat workspace." },
     ],
   }),
