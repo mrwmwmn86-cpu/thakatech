@@ -196,7 +196,9 @@ export function ChatWindow({
         )}
         <div className="mx-auto w-full max-w-3xl px-4 py-4">
           <PromptInput
-            onSubmit={async (message) => {
+            className={isRateLimited ? "pointer-events-none opacity-50" : ""}
+            onSubmit={async (message, event) => {
+              event.preventDefault();
               const text = message.text.trim();
               if (!text || isLoading || isRateLimited) return;
               await sendMessage({ text });
@@ -207,6 +209,12 @@ export function ChatWindow({
               ref={textareaRef}
               placeholder={isRateLimited ? "Rate limit active…" : "Message…"}
               disabled={isRateLimited}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey && isRateLimited) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }
+              }}
             />
             <PromptInputFooter className="justify-end">
               <PromptInputSubmit
