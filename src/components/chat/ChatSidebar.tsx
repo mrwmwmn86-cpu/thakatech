@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Plus, Trash2, LogOut, MessageSquareText } from "lucide-react";
+import { Plus, Trash2, LogOut, MessageSquareText, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -39,6 +39,16 @@ export function ChatSidebar({
         >
           <Plus className="size-4" />
           New chat
+        </Button>
+        <Button
+          asChild
+          variant="ghost"
+          className="mt-1 w-full justify-start gap-2 rounded-xl"
+        >
+          <Link to="/thumbnail">
+            <ImageIcon className="size-4" />
+            Thumbnail maker
+          </Link>
         </Button>
       </div>
 
