@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
+import { Route as AuthenticatedThumbnailRouteImport } from './routes/_authenticated.thumbnail'
 import { Route as AuthenticatedCThreadIdRouteImport } from './routes/_authenticated.c.$threadId'
 
 const AuthRoute = AuthRouteImport.update({
@@ -34,6 +35,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedThumbnailRoute = AuthenticatedThumbnailRouteImport.update({
+  id: '/thumbnail',
+  path: '/thumbnail',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedCThreadIdRoute = AuthenticatedCThreadIdRouteImport.update({
   id: '/c/$threadId',
   path: '/c/$threadId',
@@ -43,11 +49,13 @@ const AuthenticatedCThreadIdRoute = AuthenticatedCThreadIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
+  '/thumbnail': typeof AuthenticatedThumbnailRoute
   '/api/chat': typeof ApiChatRoute
   '/c/$threadId': typeof AuthenticatedCThreadIdRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
+  '/thumbnail': typeof AuthenticatedThumbnailRoute
   '/api/chat': typeof ApiChatRoute
   '/': typeof AuthenticatedIndexRoute
   '/c/$threadId': typeof AuthenticatedCThreadIdRoute
@@ -56,19 +64,21 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/thumbnail': typeof AuthenticatedThumbnailRoute
   '/api/chat': typeof ApiChatRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/c/$threadId': typeof AuthenticatedCThreadIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/api/chat' | '/c/$threadId'
+  fullPaths: '/' | '/auth' | '/thumbnail' | '/api/chat' | '/c/$threadId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/auth' | '/api/chat' | '/' | '/c/$threadId'
+  to: '/auth' | '/thumbnail' | '/api/chat' | '/' | '/c/$threadId'
   id:
     | '__root__'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/thumbnail'
     | '/api/chat'
     | '/_authenticated/'
     | '/_authenticated/c/$threadId'
@@ -110,6 +120,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/thumbnail': {
+      id: '/_authenticated/thumbnail'
+      path: '/thumbnail'
+      fullPath: '/thumbnail'
+      preLoaderRoute: typeof AuthenticatedThumbnailRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/c/$threadId': {
       id: '/_authenticated/c/$threadId'
       path: '/c/$threadId'
@@ -121,11 +138,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedThumbnailRoute: typeof AuthenticatedThumbnailRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedCThreadIdRoute: typeof AuthenticatedCThreadIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedThumbnailRoute: AuthenticatedThumbnailRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedCThreadIdRoute: AuthenticatedCThreadIdRoute,
 }
@@ -142,13 +161,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
