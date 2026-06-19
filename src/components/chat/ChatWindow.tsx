@@ -157,11 +157,11 @@ export function ChatWindow({
       <div className="border-t border-border bg-background/80 backdrop-blur">
         {isRateLimited && (
           <div className="mx-auto w-full max-w-3xl px-4 pt-3">
-            <div className="flex items-center gap-3 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            <div className="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive px-4 py-3 text-sm text-destructive-foreground">
               <Timer className="size-4 shrink-0" />
               <div>
                 <p className="font-medium">Too many messages sent</p>
-                <p className="text-destructive/80">
+                <p className="text-destructive-foreground/80">
                   Please wait{" "}
                   <span className="font-mono font-semibold tabular-nums">
                     {rateLimit.retryAfter}s
@@ -174,11 +174,11 @@ export function ChatWindow({
         )}
         {showRetryButton && (
           <div className="mx-auto w-full max-w-3xl px-4 pt-3">
-            <div className="flex items-center gap-3 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            <div className="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive px-4 py-3 text-sm text-destructive-foreground">
               <Timer className="size-4 shrink-0" />
               <div className="flex-1">
                 <p className="font-medium">Rate limit lifted</p>
-                <p className="text-destructive/80">
+                <p className="text-destructive-foreground/80">
                   You can send messages again.
                 </p>
               </div>
@@ -186,7 +186,7 @@ export function ChatWindow({
                 variant="outline"
                 size="sm"
                 onClick={handleRetry}
-                className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                className="border-destructive-foreground/30 text-destructive-foreground hover:bg-destructive-foreground/10 hover:text-destructive-foreground"
               >
                 <RotateCcw className="size-3.5 mr-1" />
                 Try again
