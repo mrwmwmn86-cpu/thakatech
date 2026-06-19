@@ -42,7 +42,7 @@ Requirements: eye-catching composition, large legible title typography, strong f
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Lovable-API-Key": LOVABLE_API_KEY,
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-image-preview",
