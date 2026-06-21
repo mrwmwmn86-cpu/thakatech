@@ -9,7 +9,10 @@ export const listThreads = createServerFn({ method: "GET" })
       .from("threads")
       .select("id, title, updated_at")
       .order("updated_at", { ascending: false });
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[threads] listThreads DB error:", error);
+      throw new Error("Unable to load conversations. Please try again.");
+    }
     return data ?? [];
   });
 
@@ -21,7 +24,10 @@ export const createThread = createServerFn({ method: "POST" })
       .insert({ user_id: context.userId, title: "New chat" })
       .select("id, title, updated_at")
       .single();
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[threads] createThread DB error:", error);
+      throw new Error("Unable to create conversation. Please try again.");
+    }
     return data;
   });
 
@@ -30,7 +36,10 @@ export const deleteThread = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const { error } = await context.supabase.from("threads").delete().eq("id", data.id);
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[threads] deleteThread DB error:", error);
+      throw new Error("Unable to delete conversation. Please try again.");
+    }
     return { ok: true };
   });
 
@@ -48,7 +57,10 @@ export const getThread = createServerFn({ method: "GET" })
       .select("id, title")
       .eq("id", data.id)
       .maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[threads] getThread DB error:", error);
+      throw new Error("Unable to load conversation. Please try again.");
+    }
     if (!thread) return null;
 
     const { data: msgs, error: mErr } = await context.supabase
@@ -56,7 +68,10 @@ export const getThread = createServerFn({ method: "GET" })
       .select("id, role, parts, created_at")
       .eq("thread_id", data.id)
       .order("created_at", { ascending: true });
-    if (mErr) throw new Error(mErr.message);
+    if (mErr) {
+      console.error("[threads] getThread messages DB error:", mErr);
+      throw new Error("Unable to load messages. Please try again.");
+    }
 
     return {
       thread,
