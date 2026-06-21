@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TrustRouteImport } from './routes/trust'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
@@ -16,6 +17,11 @@ import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AuthenticatedThumbnailRouteImport } from './routes/_authenticated.thumbnail'
 import { Route as AuthenticatedCThreadIdRouteImport } from './routes/_authenticated.c.$threadId'
 
+const TrustRoute = TrustRouteImport.update({
+  id: '/trust',
+  path: '/trust',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -49,12 +55,14 @@ const AuthenticatedCThreadIdRoute = AuthenticatedCThreadIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
+  '/trust': typeof TrustRoute
   '/thumbnail': typeof AuthenticatedThumbnailRoute
   '/api/chat': typeof ApiChatRoute
   '/c/$threadId': typeof AuthenticatedCThreadIdRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
+  '/trust': typeof TrustRoute
   '/thumbnail': typeof AuthenticatedThumbnailRoute
   '/api/chat': typeof ApiChatRoute
   '/': typeof AuthenticatedIndexRoute
@@ -64,6 +72,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
+  '/trust': typeof TrustRoute
   '/_authenticated/thumbnail': typeof AuthenticatedThumbnailRoute
   '/api/chat': typeof ApiChatRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -71,13 +80,20 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/thumbnail' | '/api/chat' | '/c/$threadId'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/trust'
+    | '/thumbnail'
+    | '/api/chat'
+    | '/c/$threadId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/auth' | '/thumbnail' | '/api/chat' | '/' | '/c/$threadId'
+  to: '/auth' | '/trust' | '/thumbnail' | '/api/chat' | '/' | '/c/$threadId'
   id:
     | '__root__'
     | '/_authenticated'
     | '/auth'
+    | '/trust'
     | '/_authenticated/thumbnail'
     | '/api/chat'
     | '/_authenticated/'
@@ -87,11 +103,19 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
+  TrustRoute: typeof TrustRoute
   ApiChatRoute: typeof ApiChatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/trust': {
+      id: '/trust'
+      path: '/trust'
+      fullPath: '/trust'
+      preLoaderRoute: typeof TrustRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -156,6 +180,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
+  TrustRoute: TrustRoute,
   ApiChatRoute: ApiChatRoute,
 }
 export const routeTree = rootRouteImport
