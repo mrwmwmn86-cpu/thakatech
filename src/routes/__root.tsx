@@ -78,16 +78,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
+      { title: "مساعد حقيقي ذكاء اصطناعي" },
       { name: "description", content: "Swift Chat is a conversational AI application that provides intelligent responses and creative text generation." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
+      { property: "og:title", content: "مساعد حقيقي ذكاء اصطناعي" },
       { property: "og:description", content: "Swift Chat is a conversational AI application that provides intelligent responses and creative text generation." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "Lovable App" },
+      { name: "twitter:title", content: "مساعد حقيقي ذكاء اصطناعي" },
       { name: "twitter:description", content: "Swift Chat is a conversational AI application that provides intelligent responses and creative text generation." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/dd3897bf-1aa9-424f-addb-8daea7504f3c" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/dd3897bf-1aa9-424f-addb-8daea7504f3c" },
     ],
     links: [
       {
