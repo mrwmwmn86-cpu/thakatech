@@ -11,7 +11,6 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { ThemeProvider } from "@/components/theme-provider";
 
 function NotFoundComponent() {
   return (
@@ -79,29 +78,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "مساعد حقيقي ذكاء اصطناعي" },
-      { name: "description", content: "Swift Chat is a conversational AI application that provides intelligent responses and creative text generation." },
+      { name: "description", content: "Swift Chat is a conversational AI that generates creative text and answers questions, now with bulk thumbnail creation." },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "مساعد حقيقي ذكاء اصطناعي" },
-      { property: "og:description", content: "Swift Chat is a conversational AI application that provides intelligent responses and creative text generation." },
+      { property: "og:description", content: "Swift Chat is a conversational AI that generates creative text and answers questions, now with bulk thumbnail creation." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "مساعد حقيقي ذكاء اصطناعي" },
-      { name: "twitter:description", content: "Swift Chat is a conversational AI application that provides intelligent responses and creative text generation." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/dd3897bf-1aa9-424f-addb-8daea7504f3c" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/dd3897bf-1aa9-424f-addb-8daea7504f3c" },
+      { name: "twitter:description", content: "Swift Chat is a conversational AI that generates creative text and answers questions, now with bulk thumbnail creation." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a99f27c8-0003-4855-9649-4241225c6360/id-preview-46aaac87--3d69def1-e5c4-4dc2-a8d4-86ed15dab38d.lovable.app-1782153269293.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a99f27c8-0003-4855-9649-4241225c6360/id-preview-46aaac87--3d69def1-e5c4-4dc2-a8d4-86ed15dab38d.lovable.app-1782153269293.png" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
-      },
-    ],
-    scripts: [
-      {
-        async: true,
-        src: "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6718009341637246",
-        crossOrigin: "anonymous",
       },
     ],
   }),
@@ -116,11 +108,6 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('theme')||'system';var d=t==='system'?window.matchMedia('(prefers-color-scheme: dark)').matches:t==='dark';document.documentElement.classList.toggle('dark',d);}catch(e){}})();`,
-          }}
-        />
       </head>
       <body>
         {children}
@@ -135,10 +122,8 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
-      </ThemeProvider>
+      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+      <Outlet />
     </QueryClientProvider>
   );
 }
