@@ -6,6 +6,15 @@ import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/")({
   component: IndexRedirect,
+  head: () => ({
+    scripts: [
+      {
+        async: true,
+        src: "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6718009341637246",
+        crossOrigin: "anonymous",
+      },
+    ],
+  }),
 });
 
 function IndexRedirect() {
