@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AuthenticatedThumbnailRouteImport } from './routes/_authenticated.thumbnail'
+import { Route as AuthenticatedPromptsRouteImport } from './routes/_authenticated.prompts'
 import { Route as AuthenticatedCThreadIdRouteImport } from './routes/_authenticated.c.$threadId'
 
 const TrustRoute = TrustRouteImport.update({
@@ -46,6 +47,11 @@ const AuthenticatedThumbnailRoute = AuthenticatedThumbnailRouteImport.update({
   path: '/thumbnail',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedPromptsRoute = AuthenticatedPromptsRouteImport.update({
+  id: '/prompts',
+  path: '/prompts',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedCThreadIdRoute = AuthenticatedCThreadIdRouteImport.update({
   id: '/c/$threadId',
   path: '/c/$threadId',
@@ -56,6 +62,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
   '/trust': typeof TrustRoute
+  '/prompts': typeof AuthenticatedPromptsRoute
   '/thumbnail': typeof AuthenticatedThumbnailRoute
   '/api/chat': typeof ApiChatRoute
   '/c/$threadId': typeof AuthenticatedCThreadIdRoute
@@ -63,6 +70,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/trust': typeof TrustRoute
+  '/prompts': typeof AuthenticatedPromptsRoute
   '/thumbnail': typeof AuthenticatedThumbnailRoute
   '/api/chat': typeof ApiChatRoute
   '/': typeof AuthenticatedIndexRoute
@@ -73,6 +81,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
   '/trust': typeof TrustRoute
+  '/_authenticated/prompts': typeof AuthenticatedPromptsRoute
   '/_authenticated/thumbnail': typeof AuthenticatedThumbnailRoute
   '/api/chat': typeof ApiChatRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -84,16 +93,25 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/trust'
+    | '/prompts'
     | '/thumbnail'
     | '/api/chat'
     | '/c/$threadId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/auth' | '/trust' | '/thumbnail' | '/api/chat' | '/' | '/c/$threadId'
+  to:
+    | '/auth'
+    | '/trust'
+    | '/prompts'
+    | '/thumbnail'
+    | '/api/chat'
+    | '/'
+    | '/c/$threadId'
   id:
     | '__root__'
     | '/_authenticated'
     | '/auth'
     | '/trust'
+    | '/_authenticated/prompts'
     | '/_authenticated/thumbnail'
     | '/api/chat'
     | '/_authenticated/'
@@ -151,6 +169,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedThumbnailRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/prompts': {
+      id: '/_authenticated/prompts'
+      path: '/prompts'
+      fullPath: '/prompts'
+      preLoaderRoute: typeof AuthenticatedPromptsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/c/$threadId': {
       id: '/_authenticated/c/$threadId'
       path: '/c/$threadId'
@@ -162,12 +187,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedPromptsRoute: typeof AuthenticatedPromptsRoute
   AuthenticatedThumbnailRoute: typeof AuthenticatedThumbnailRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedCThreadIdRoute: typeof AuthenticatedCThreadIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedPromptsRoute: AuthenticatedPromptsRoute,
   AuthenticatedThumbnailRoute: AuthenticatedThumbnailRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedCThreadIdRoute: AuthenticatedCThreadIdRoute,
