@@ -115,6 +115,11 @@ export function ChatSidebar({
           <LogOut className="size-4" />
           Sign out
         </Button>
+        <div className="mt-2 flex justify-center gap-3 text-[11px] text-muted-foreground">
+          <Link to="/privacy" className="hover:text-foreground">Privacy</Link>
+          <span aria-hidden>·</span>
+          <Link to="/contact" className="hover:text-foreground">Contact</Link>
+        </div>
       </div>
     </aside>
   );
