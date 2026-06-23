@@ -180,6 +180,20 @@ export function ChatWindow({
                     ) : (
                       <div className="whitespace-pre-wrap">{text}</div>
                     )}
+                    {text && (
+                      <div className="mt-2 flex justify-end">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label="Copy message"
+                          onClick={() => copyMessage(m.id, text)}
+                          className="opacity-60 hover:opacity-100"
+                        >
+                          {copiedId === m.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                        </Button>
+                      </div>
+                    )}
                   </MessageContent>
                 </Message>
               );
