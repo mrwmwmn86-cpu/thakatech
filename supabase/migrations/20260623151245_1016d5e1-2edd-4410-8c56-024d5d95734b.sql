@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Users can view own rate limits" ON public.rate_limits;
