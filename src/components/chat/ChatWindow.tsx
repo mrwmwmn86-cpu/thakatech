@@ -251,13 +251,61 @@ export function ChatWindow({
           </div>
         )}
         <div className="mx-auto w-full max-w-3xl px-4 py-4">
+          {attachments.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-2">
+              {attachments.map((a) => (
+                <div
+                  key={a.id}
+                  className="group relative flex items-center gap-2 rounded-xl border border-border bg-card p-1.5 pr-2 shadow-sm"
+                >
+                  {a.previewUrl ? (
+                    <img src={a.previewUrl} alt={a.file.name} className="size-10 rounded-md object-cover" />
+                  ) : (
+                    <div className="flex size-10 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                      <Paperclip className="size-4" />
+                    </div>
+                  )}
+                  <div className="min-w-0 max-w-[160px]">
+                    <p className="truncate text-xs font-medium">{a.file.name}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {(a.file.size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="Remove attachment"
+                    onClick={() => removeAttachment(a.id)}
+                    className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow hover:text-foreground"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*,application/pdf,.txt,.md,.csv,.json"
+            className="hidden"
+            onChange={(e) => {
+              addFiles(e.target.files);
+              if (fileInputRef.current) fileInputRef.current.value = "";
+            }}
+          />
           <PromptInput
             className={isRateLimited ? "pointer-events-none opacity-50" : ""}
             onSubmit={async (message, event) => {
               event.preventDefault();
               const text = message.text.trim();
               if (!text || isLoading || isRateLimited) return;
+              if (attachments.length > 0) {
+                toast.info("Attachments are previewed locally; text was sent.");
+              }
               await sendMessage({ text });
+              attachments.forEach((a) => a.previewUrl && URL.revokeObjectURL(a.previewUrl));
+              setAttachments([]);
               onMessageSent?.();
             }}
           >
@@ -272,7 +320,18 @@ export function ChatWindow({
                 }
               }}
             />
-            <PromptInputFooter className="justify-end">
+            <PromptInputFooter className="justify-between">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Attach files"
+                disabled={isRateLimited}
+                onClick={() => fileInputRef.current?.click()}
+                className="rounded-full"
+              >
+                <Plus className="size-4" />
+              </Button>
               <PromptInputSubmit
                 status={status}
                 disabled={isLoading || isRateLimited}
