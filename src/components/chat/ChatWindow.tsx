@@ -106,6 +106,46 @@ export function ChatWindow({
   const isRateLimited = rateLimit !== null && rateLimit.retryAfter > 0;
   const showRetryButton = rateLimit !== null && rateLimit.retryAfter === 0;
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const addFiles = (files: FileList | null) => {
+    if (!files) return;
+    const next: Attachment[] = [];
+    Array.from(files).forEach((file) => {
+      const id = `${file.name}-${file.size}-${Date.now()}-${Math.random()}`;
+      const previewUrl = file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined;
+      next.push({ id, file, previewUrl });
+    });
+    setAttachments((prev) => [...prev, ...next]);
+  };
+
+  const removeAttachment = (id: string) => {
+    setAttachments((prev) => {
+      const target = prev.find((a) => a.id === id);
+      if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl);
+      return prev.filter((a) => a.id !== id);
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      attachments.forEach((a) => a.previewUrl && URL.revokeObjectURL(a.previewUrl));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const copyMessage = async (id: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      toast.success("Copied to clipboard");
+      setTimeout(() => setCopiedId((c) => (c === id ? null : c)), 1500);
+    } catch {
+      toast.error("Failed to copy");
+    }
+  };
 
   const handleRetry = () => {
     setRateLimit(null);
