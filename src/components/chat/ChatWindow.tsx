@@ -16,9 +16,11 @@ import {
   PromptInputSubmit,
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
-import { MessageSquareText, Timer, RotateCcw } from "lucide-react";
+import { MessageSquareText, Timer, RotateCcw, Plus, X, Copy, Check, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+
+type Attachment = { id: string; file: File; previewUrl?: string };
 
 export function ChatWindow({
   threadId,
@@ -104,6 +106,46 @@ export function ChatWindow({
   const isRateLimited = rateLimit !== null && rateLimit.retryAfter > 0;
   const showRetryButton = rateLimit !== null && rateLimit.retryAfter === 0;
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const addFiles = (files: FileList | null) => {
+    if (!files) return;
+    const next: Attachment[] = [];
+    Array.from(files).forEach((file) => {
+      const id = `${file.name}-${file.size}-${Date.now()}-${Math.random()}`;
+      const previewUrl = file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined;
+      next.push({ id, file, previewUrl });
+    });
+    setAttachments((prev) => [...prev, ...next]);
+  };
+
+  const removeAttachment = (id: string) => {
+    setAttachments((prev) => {
+      const target = prev.find((a) => a.id === id);
+      if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl);
+      return prev.filter((a) => a.id !== id);
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      attachments.forEach((a) => a.previewUrl && URL.revokeObjectURL(a.previewUrl));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const copyMessage = async (id: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      toast.success("Copied to clipboard");
+      setTimeout(() => setCopiedId((c) => (c === id ? null : c)), 1500);
+    } catch {
+      toast.error("Failed to copy");
+    }
+  };
 
   const handleRetry = () => {
     setRateLimit(null);
@@ -137,6 +179,20 @@ export function ChatWindow({
                       <MessageResponse>{text}</MessageResponse>
                     ) : (
                       <div className="whitespace-pre-wrap">{text}</div>
+                    )}
+                    {text && (
+                      <div className="mt-2 flex justify-end">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label="Copy message"
+                          onClick={() => copyMessage(m.id, text)}
+                          className="opacity-60 hover:opacity-100"
+                        >
+                          {copiedId === m.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                        </Button>
+                      </div>
                     )}
                   </MessageContent>
                 </Message>
@@ -195,13 +251,61 @@ export function ChatWindow({
           </div>
         )}
         <div className="mx-auto w-full max-w-3xl px-4 py-4">
+          {attachments.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-2">
+              {attachments.map((a) => (
+                <div
+                  key={a.id}
+                  className="group relative flex items-center gap-2 rounded-xl border border-border bg-card p-1.5 pr-2 shadow-sm"
+                >
+                  {a.previewUrl ? (
+                    <img src={a.previewUrl} alt={a.file.name} className="size-10 rounded-md object-cover" />
+                  ) : (
+                    <div className="flex size-10 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                      <Paperclip className="size-4" />
+                    </div>
+                  )}
+                  <div className="min-w-0 max-w-[160px]">
+                    <p className="truncate text-xs font-medium">{a.file.name}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {(a.file.size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="Remove attachment"
+                    onClick={() => removeAttachment(a.id)}
+                    className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow hover:text-foreground"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*,application/pdf,.txt,.md,.csv,.json"
+            className="hidden"
+            onChange={(e) => {
+              addFiles(e.target.files);
+              if (fileInputRef.current) fileInputRef.current.value = "";
+            }}
+          />
           <PromptInput
             className={isRateLimited ? "pointer-events-none opacity-50" : ""}
             onSubmit={async (message, event) => {
               event.preventDefault();
               const text = message.text.trim();
               if (!text || isLoading || isRateLimited) return;
+              if (attachments.length > 0) {
+                toast.info("Attachments are previewed locally; text was sent.");
+              }
               await sendMessage({ text });
+              attachments.forEach((a) => a.previewUrl && URL.revokeObjectURL(a.previewUrl));
+              setAttachments([]);
               onMessageSent?.();
             }}
           >
@@ -216,7 +320,18 @@ export function ChatWindow({
                 }
               }}
             />
-            <PromptInputFooter className="justify-end">
+            <PromptInputFooter className="justify-between">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Attach files"
+                disabled={isRateLimited}
+                onClick={() => fileInputRef.current?.click()}
+                className="rounded-full"
+              >
+                <Plus className="size-4" />
+              </Button>
               <PromptInputSubmit
                 status={status}
                 disabled={isLoading || isRateLimited}
