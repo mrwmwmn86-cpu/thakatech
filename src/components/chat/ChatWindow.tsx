@@ -16,9 +16,11 @@ import {
   PromptInputSubmit,
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
-import { MessageSquareText, Timer, RotateCcw } from "lucide-react";
+import { MessageSquareText, Timer, RotateCcw, Plus, X, Copy, Check, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+
+type Attachment = { id: string; file: File; previewUrl?: string };
 
 export function ChatWindow({
   threadId,
