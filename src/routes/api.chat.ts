@@ -2,15 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { createClient } from "@supabase/supabase-js";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { DEFAULT_MODEL_ID, MODEL_IDS } from "@/lib/chat-models";
 import type { Database } from "@/integrations/supabase/types";
 
 type ChatBody = {
   messages: UIMessage[];
   threadId: string;
+  model?: string;
 };
 
 const SYSTEM_PROMPT =
-  "You are a helpful, concise AI assistant. Use Markdown for formatting. Be direct and clear.";
+  "You are a helpful, professional AI assistant. Use Markdown for formatting. Be direct and clear. When the user attaches an image, describe or use it as part of your answer.";
 
 export const Route = createFileRoute("/api/chat")({
   server: {
