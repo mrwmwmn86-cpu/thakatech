@@ -70,6 +70,8 @@ export const Route = createFileRoute("/api/chat")({
 
         const body = (await request.json()) as ChatBody;
         const { messages, threadId } = body;
+        const modelId =
+          body.model && MODEL_IDS.includes(body.model) ? body.model : DEFAULT_MODEL_ID;
         if (!Array.isArray(messages) || !threadId) {
           return new Response("Invalid request", { status: 400 });
         }
