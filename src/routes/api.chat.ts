@@ -72,6 +72,39 @@ export const Route = createFileRoute("/api/chat")({
           return new Response("Invalid request", { status: 400 });
         }
 
+        // Validate threadId is a UUID
+        const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (typeof threadId !== "string" || !uuidRe.test(threadId)) {
+          return new Response("Invalid request", { status: 400 });
+        }
+
+        // Cap message count to prevent token-abuse via huge histories
+        const MAX_MESSAGES = 100;
+        if (messages.length === 0 || messages.length > MAX_MESSAGES) {
+          return new Response("Invalid message count", { status: 400 });
+        }
+
+        // Cap total payload size across all message parts (~200k chars)
+        const MAX_TOTAL_CHARS = 200_000;
+        const MAX_PART_CHARS = 50_000;
+        let totalChars = 0;
+        for (const m of messages) {
+          if (!m || typeof m !== "object" || !Array.isArray((m as UIMessage).parts)) {
+            return new Response("Invalid message shape", { status: 400 });
+          }
+          for (const p of (m as UIMessage).parts) {
+            if (p && p.type === "text" && typeof p.text === "string") {
+              if (p.text.length > MAX_PART_CHARS) {
+                return new Response("Message part too large", { status: 413 });
+              }
+              totalChars += p.text.length;
+              if (totalChars > MAX_TOTAL_CHARS) {
+                return new Response("Payload too large", { status: 413 });
+              }
+            }
+          }
+        }
+
         // Verify thread belongs to user (RLS will also enforce)
         const { data: thread, error: threadError } = await supabase
           .from("threads")
