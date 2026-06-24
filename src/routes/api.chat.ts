@@ -13,9 +13,10 @@ const SYSTEM_PROMPT =
   "You are a helpful, concise AI assistant. Use Markdown for formatting. Be direct and clear.";
 
 export const Route = createFileRoute("/api/chat")({
+  // @ts-expect-error - server handlers type not yet exported in this version
   server: {
     handlers: {
-      POST: async ({ request }) => {
+      POST: async ({ request }: { request: Request }) => {
         const authHeader = request.headers.get("authorization");
         if (!authHeader?.startsWith("Bearer ")) {
           return new Response("Unauthorized", { status: 401 });
