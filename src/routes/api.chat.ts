@@ -2,18 +2,19 @@ import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { createClient } from "@supabase/supabase-js";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { DEFAULT_MODEL_ID, MODEL_IDS } from "@/lib/chat-models";
 import type { Database } from "@/integrations/supabase/types";
 
 type ChatBody = {
   messages: UIMessage[];
   threadId: string;
+  model?: string;
 };
 
 const SYSTEM_PROMPT =
-  "You are a helpful, concise AI assistant. Use Markdown for formatting. Be direct and clear.";
+  "You are a helpful, professional AI assistant. Use Markdown for formatting. Be direct and clear. When the user attaches an image, describe or use it as part of your answer.";
 
 export const Route = createFileRoute("/api/chat")({
-  // @ts-expect-error - server handlers type not yet exported in this version
   server: {
     handlers: {
       POST: async ({ request }: { request: Request }) => {
@@ -69,6 +70,8 @@ export const Route = createFileRoute("/api/chat")({
 
         const body = (await request.json()) as ChatBody;
         const { messages, threadId } = body;
+        const modelId =
+          body.model && MODEL_IDS.includes(body.model) ? body.model : DEFAULT_MODEL_ID;
         if (!Array.isArray(messages) || !threadId) {
           return new Response("Invalid request", { status: 400 });
         }
@@ -149,7 +152,7 @@ export const Route = createFileRoute("/api/chat")({
 
         const gateway = createLovableAiGatewayProvider(LOVABLE_API_KEY);
         const result = streamText({
-          model: gateway("google/gemini-3-flash-preview"),
+          model: gateway(modelId),
           system: SYSTEM_PROMPT,
           messages: await convertToModelMessages(messages),
         });
