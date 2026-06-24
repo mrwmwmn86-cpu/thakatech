@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrustRouteImport } from './routes/trust'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as GameRouteImport } from './routes/game'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -29,6 +30,11 @@ const TrustRoute = TrustRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GameRoute = GameRouteImport.update({
+  id: '/game',
+  path: '/game',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GalleryRoute = GalleryRouteImport.update({
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
+  '/game': typeof GameRoute
   '/privacy': typeof PrivacyRoute
   '/trust': typeof TrustRoute
   '/prompts': typeof AuthenticatedPromptsRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
+  '/game': typeof GameRoute
   '/privacy': typeof PrivacyRoute
   '/trust': typeof TrustRoute
   '/prompts': typeof AuthenticatedPromptsRoute
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
+  '/game': typeof GameRoute
   '/privacy': typeof PrivacyRoute
   '/trust': typeof TrustRoute
   '/_authenticated/prompts': typeof AuthenticatedPromptsRoute
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/gallery'
+    | '/game'
     | '/privacy'
     | '/trust'
     | '/prompts'
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/gallery'
+    | '/game'
     | '/privacy'
     | '/trust'
     | '/prompts'
@@ -145,6 +156,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/gallery'
+    | '/game'
     | '/privacy'
     | '/trust'
     | '/_authenticated/prompts'
@@ -159,6 +171,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
   GalleryRoute: typeof GalleryRoute
+  GameRoute: typeof GameRoute
   PrivacyRoute: typeof PrivacyRoute
   TrustRoute: typeof TrustRoute
   ApiChatRoute: typeof ApiChatRoute
@@ -178,6 +191,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/game': {
+      id: '/game'
+      path: '/game'
+      fullPath: '/game'
+      preLoaderRoute: typeof GameRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gallery': {
@@ -269,6 +289,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
   GalleryRoute: GalleryRoute,
+  GameRoute: GameRoute,
   PrivacyRoute: PrivacyRoute,
   TrustRoute: TrustRoute,
   ApiChatRoute: ApiChatRoute,
@@ -276,3 +297,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
