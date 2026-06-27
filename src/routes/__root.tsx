@@ -128,6 +128,10 @@ function RootComponent() {
       <ThemeProvider>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
+        <div style={{ display: 'flex', justifyContent: 'center', margin: '15px 0' }}>
+  <div id="container-90f81fb54736863313487c6de6e7d6b2"></div>
+</div>
+
         <Toaster />
       </ThemeProvider>
     </QueryClientProvider>
