@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { type LogMessage } from "ai";
+import { type UIMessage } from "ai";
 import { listThreads, createThread, deleteThread, getThread } from "@/lib/threads.functions";
 import { ChatSidebar } from "./ChatSidebar";
 import { ChatWindow } from "./ChatWindow";
