@@ -86,7 +86,7 @@ export function ChatLayout({ threadId }: { threadId: string }) {
           ) : threadQ.data ? (
             <ChatWindow
               threadId={threadId}
-              initialMessages={threadQ.data.messages as unknown as LogMessage[]}
+              initialMessages={threadQ.data.messages as unknown as UIMessage[]}
               onMessageSent={() => qc.invalidateQueries({ queryKey: ["threads"] })}
             />
           ) : (
