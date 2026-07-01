@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { type LogMessage } from "ai";
+import { type UIMessage } from "ai";
 import { listThreads, createThread, deleteThread, getThread } from "@/lib/threads.functions";
 import { ChatSidebar } from "./ChatSidebar";
 import { ChatWindow } from "./ChatWindow";
@@ -86,7 +86,7 @@ export function ChatLayout({ threadId }: { threadId: string }) {
           ) : threadQ.data ? (
             <ChatWindow
               threadId={threadId}
-              initialMessages={threadQ.data.messages as unknown as LogMessage[]}
+              initialMessages={threadQ.data.messages as unknown as UIMessage[]}
               onMessageSent={() => qc.invalidateQueries({ queryKey: ["threads"] })}
             />
           ) : (

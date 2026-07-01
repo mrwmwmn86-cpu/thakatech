@@ -27,6 +27,7 @@ import {
   Paperclip,
   Download,
   Sparkles,
+  Globe,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ type Attachment = {
 };
 
 const MODEL_STORAGE_KEY = "chat:selected-model";
+const WEB_SEARCH_STORAGE_KEY = "chat:web-search";
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -95,6 +97,20 @@ export function ChatWindow({
     }
   }, [modelId]);
 
+  const [webSearch, setWebSearch] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem(WEB_SEARCH_STORAGE_KEY) !== "0";
+  });
+  const webSearchRef = useRef(webSearch);
+  useEffect(() => {
+    webSearchRef.current = webSearch;
+    try {
+      localStorage.setItem(WEB_SEARCH_STORAGE_KEY, webSearch ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }, [webSearch]);
+
   const transport = useMemo(() => {
     const originalFetch = globalThis.fetch.bind(globalThis);
     const customFetch: typeof originalFetch = async (input, init) => {
@@ -120,7 +136,7 @@ export function ChatWindow({
         const { data } = await supabase.auth.getSession();
         const token = data.session?.access_token ?? "";
         return {
-          body: { messages, threadId: id, model: modelRef.current },
+          body: { messages, threadId: id, model: modelRef.current, webSearch: webSearchRef.current },
           headers: { Authorization: `Bearer ${token}` } as Record<string, string>,
         };
       },
@@ -553,17 +569,32 @@ export function ChatWindow({
               }}
             />
             <PromptInputFooter className="justify-between">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                aria-label="Attach images"
-                disabled={isRateLimited}
-                onClick={() => fileInputRef.current?.click()}
-                className="rounded-full"
-              >
-                <Plus className="size-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Attach images"
+                  disabled={isRateLimited}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="rounded-full"
+                >
+                  <Plus className="size-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant={webSearch ? "default" : "ghost"}
+                  size="sm"
+                  aria-pressed={webSearch}
+                  aria-label="Toggle web search"
+                  disabled={isRateLimited}
+                  onClick={() => setWebSearch((v) => !v)}
+                  className="h-7 gap-1.5 rounded-full px-2.5 text-xs"
+                >
+                  <Globe className="size-3.5" />
+                  <span>Web</span>
+                </Button>
+              </div>
               <PromptInputSubmit status={status} disabled={isLoading || isRateLimited} />
             </PromptInputFooter>
           </PromptInput>

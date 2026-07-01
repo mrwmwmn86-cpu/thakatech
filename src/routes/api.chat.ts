@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { convertToModelMessages, streamText, type UIMessage } from "ai";
+import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage } from "ai";
+import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { DEFAULT_MODEL_ID, MODEL_IDS } from "@/lib/chat-models";
@@ -9,10 +10,37 @@ type ChatBody = {
   messages: UIMessage[];
   threadId: string;
   model?: string;
+  webSearch?: boolean;
 };
 
 const SYSTEM_PROMPT =
-  "You are a helpful, professional AI assistant. Use Markdown for formatting. Be direct and clear. When the user attaches an image, describe or use it as part of your answer.";
+  "You are a helpful, professional AI assistant. Use Markdown for formatting. Be direct and clear. When the user attaches an image, describe or use it as part of your answer. When the `web_search` tool is available and the user's question would benefit from current information, news, facts, or citations, call it (you may call it multiple times with refined queries). After using web_search, ALWAYS cite sources inline using numbered footnote-style links like `[1](https://...)`, and end your reply with a `**Sources**` section listing each cited URL with its title.";
+
+async function firecrawlSearch(query: string, limit: number) {
+  const apiKey = process.env.FIRECRAWL_API_KEY;
+  if (!apiKey) throw new Error("FIRECRAWL_API_KEY not configured");
+  const res = await fetch("https://api.firecrawl.dev/v2/search", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query, limit: Math.min(Math.max(limit, 1), 8) }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Firecrawl search failed (${res.status}): ${text.slice(0, 200)}`);
+  }
+  const json = (await res.json()) as {
+    data?: { web?: Array<{ url?: string; title?: string; description?: string }> } | Array<{ url?: string; title?: string; description?: string }>;
+  };
+  const raw = Array.isArray(json.data) ? json.data : (json.data?.web ?? []);
+  return raw.slice(0, limit).map((r) => ({
+    url: r.url ?? "",
+    title: r.title ?? "",
+    snippet: r.description ?? "",
+  }));
+}
 
 export const Route = createFileRoute("/api/chat")({
   server: {
@@ -151,10 +179,37 @@ export const Route = createFileRoute("/api/chat")({
         }
 
         const gateway = createLovableAiGatewayProvider(LOVABLE_API_KEY);
+        const hasFirecrawl = Boolean(process.env.FIRECRAWL_API_KEY);
+        const wantWebSearch = body.webSearch !== false && hasFirecrawl;
         const result = streamText({
           model: gateway(modelId),
           system: SYSTEM_PROMPT,
           messages: await convertToModelMessages(messages),
+          stopWhen: stepCountIs(5),
+          tools: wantWebSearch
+            ? {
+                web_search: tool({
+                  description:
+                    "Search the web for up-to-date information. Returns a list of results with title, url, and snippet. Use this when the user asks about current events, facts you're unsure about, or anything that benefits from citations.",
+                  inputSchema: z.object({
+                    query: z.string().min(1).max(200).describe("The search query"),
+                    limit: z.number().int().min(1).max(8).default(5),
+                  }),
+                  execute: async ({ query, limit }) => {
+                    try {
+                      const results = await firecrawlSearch(query, limit ?? 5);
+                      return { query, results };
+                    } catch (err) {
+                      return {
+                        query,
+                        results: [],
+                        error: err instanceof Error ? err.message : "search failed",
+                      };
+                    }
+                  },
+                }),
+              }
+            : undefined,
         });
 
         return result.toUIMessageStreamResponse({
