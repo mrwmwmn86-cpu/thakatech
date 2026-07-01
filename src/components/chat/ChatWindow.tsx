@@ -136,7 +136,7 @@ export function ChatWindow({
         const { data } = await supabase.auth.getSession();
         const token = data.session?.access_token ?? "";
         return {
-          body: { messages, threadId: id, model: modelRef.current },
+          body: { messages, threadId: id, model: modelRef.current, webSearch: webSearchRef.current },
           headers: { Authorization: `Bearer ${token}` } as Record<string, string>,
         };
       },
