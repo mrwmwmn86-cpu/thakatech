@@ -569,17 +569,32 @@ export function ChatWindow({
               }}
             />
             <PromptInputFooter className="justify-between">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                aria-label="Attach images"
-                disabled={isRateLimited}
-                onClick={() => fileInputRef.current?.click()}
-                className="rounded-full"
-              >
-                <Plus className="size-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Attach images"
+                  disabled={isRateLimited}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="rounded-full"
+                >
+                  <Plus className="size-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant={webSearch ? "default" : "ghost"}
+                  size="sm"
+                  aria-pressed={webSearch}
+                  aria-label="Toggle web search"
+                  disabled={isRateLimited}
+                  onClick={() => setWebSearch((v) => !v)}
+                  className="h-7 gap-1.5 rounded-full px-2.5 text-xs"
+                >
+                  <Globe className="size-3.5" />
+                  <span>Web</span>
+                </Button>
+              </div>
               <PromptInputSubmit status={status} disabled={isLoading || isRateLimited} />
             </PromptInputFooter>
           </PromptInput>
