@@ -48,6 +48,7 @@ type Attachment = {
 };
 
 const MODEL_STORAGE_KEY = "chat:selected-model";
+const WEB_SEARCH_STORAGE_KEY = "chat:web-search";
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
