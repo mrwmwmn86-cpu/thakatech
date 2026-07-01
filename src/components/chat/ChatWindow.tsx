@@ -97,6 +97,20 @@ export function ChatWindow({
     }
   }, [modelId]);
 
+  const [webSearch, setWebSearch] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem(WEB_SEARCH_STORAGE_KEY) !== "0";
+  });
+  const webSearchRef = useRef(webSearch);
+  useEffect(() => {
+    webSearchRef.current = webSearch;
+    try {
+      localStorage.setItem(WEB_SEARCH_STORAGE_KEY, webSearch ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }, [webSearch]);
+
   const transport = useMemo(() => {
     const originalFetch = globalThis.fetch.bind(globalThis);
     const customFetch: typeof originalFetch = async (input, init) => {
