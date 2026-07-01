@@ -179,10 +179,37 @@ export const Route = createFileRoute("/api/chat")({
         }
 
         const gateway = createLovableAiGatewayProvider(LOVABLE_API_KEY);
+        const hasFirecrawl = Boolean(process.env.FIRECRAWL_API_KEY);
+        const wantWebSearch = body.webSearch !== false && hasFirecrawl;
         const result = streamText({
           model: gateway(modelId),
           system: SYSTEM_PROMPT,
           messages: await convertToModelMessages(messages),
+          stopWhen: stepCountIs(5),
+          tools: wantWebSearch
+            ? {
+                web_search: tool({
+                  description:
+                    "Search the web for up-to-date information. Returns a list of results with title, url, and snippet. Use this when the user asks about current events, facts you're unsure about, or anything that benefits from citations.",
+                  inputSchema: z.object({
+                    query: z.string().min(1).max(200).describe("The search query"),
+                    limit: z.number().int().min(1).max(8).default(5),
+                  }),
+                  execute: async ({ query, limit }) => {
+                    try {
+                      const results = await firecrawlSearch(query, limit ?? 5);
+                      return { query, results };
+                    } catch (err) {
+                      return {
+                        query,
+                        results: [],
+                        error: err instanceof Error ? err.message : "search failed",
+                      };
+                    }
+                  },
+                }),
+              }
+            : undefined,
         });
 
         return result.toUIMessageStreamResponse({
